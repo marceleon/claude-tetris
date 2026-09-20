@@ -4,7 +4,7 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
+const DARK_COLORS = [
   null,
   '#4dd0e1', // I - cyan
   '#ffd54f', // O - yellow
@@ -14,6 +14,19 @@ const COLORS = [
   '#90caf9', // J - azul pálido
   '#ffb74d', // L - orange
 ];
+
+const LIGHT_COLORS = [
+  null,
+  '#00acc1', // I - cyan
+  '#fbc02d', // O - yellow
+  '#8e24aa', // T - purple
+  '#43a047', // S - green
+  '#e53935', // Z - red
+  '#1e88e5', // J - azul
+  '#fb8c00', // L - orange
+];
+
+const THEME_KEY = 'tetris-theme';
 
 const PIECES = [
   null,
@@ -39,8 +52,24 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeToggleBtn = document.getElementById('theme-toggle');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, theme;
+
+function applyTheme(t) {
+  theme = t;
+  document.documentElement.classList.toggle('light', theme === 'light');
+  themeToggleBtn.textContent = theme === 'light' ? '🌙' : '☀️';
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function toggleTheme() {
+  applyTheme(theme === 'light' ? 'dark' : 'light');
+}
+
+function activeColors() {
+  return theme === 'light' ? LIGHT_COLORS : DARK_COLORS;
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -158,7 +187,7 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const color = activeColors()[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
   context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
@@ -169,7 +198,7 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim();
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -300,5 +329,7 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+themeToggleBtn.addEventListener('click', toggleTheme);
 
+applyTheme(localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark');
 init();
